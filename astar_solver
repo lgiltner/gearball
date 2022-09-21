@@ -1,0 +1,72 @@
+import gearball
+import time
+import heapq
+import queue
+
+class astar:
+    def __init__(self, numMoves):
+        #heap
+        self.h = []
+        #queue
+        self.q= queue.Queue()
+        self.start_unsolved = gearball.Gearball()
+        self.start_unsolved.randomMoves(numMoves)
+        print(self.start_unsolved.lastMove)
+    
+    def get_children(self, ballState):
+        children = [ballState.rotateLeftR().copy(), ballState.rotateTopR().copy(), ballState.rotateFrontR().copy(), ballState.rotateLeftL().copy(), ballState.rotateTopL().copy(), ballState.rotateFrontL().copy()]
+        child_depth = ballState.depth + 1
+
+        for child in children:
+            child.parent = ballState
+            child.depth = child_depth
+
+        return children
+
+    def getH_val(self, ballState):
+        return ballState.eval()
+
+    def getF_val(self, ballState):
+        return self.getH_val(ballState) + ballState.depth
+
+    def print_path(self, ballState):
+        moves = 0
+        state = ballState
+        while state != None:
+            print(moves, ": ", state.lastMove[-1])
+            state = state.parent
+            moves += 1
+
+    
+    def solve(self):
+        start_time = time.time()
+        item = self.start_unsolved
+        self.q.put(item)
+        heapq.heappush(self.h, self.start_unsolved)
+        nodes_visited = 0
+        #while the queue isn't empty
+        while not self.q.empty():
+            n = heapq.heappop(self.h)
+
+            #check if solved
+            if self.getH_val(n) == 0:
+                stop_time = time.time()
+                time_elapsed = stop_time - start_time
+                print("time to solve: ", time_elapsed)
+                print("nodes visited: ", nodes_visited)
+                self.print_path(n)
+                return
+            else:
+                nodes_visited += 1
+                children = self.get_children(n)
+                for child in children:
+                    heapq.heappush(self.h, child)
+                    self.q.put(child)
+
+def main():
+    numMoves = int(input("how many random moves? "))
+    solver = astar(numMoves)
+    solver.solve()
+
+
+main()
